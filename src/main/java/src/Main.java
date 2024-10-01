@@ -29,7 +29,7 @@ public class Main {
         return userInput.nextLine().trim().equalsIgnoreCase("Y");
     }
 
-    private static String getUserInput(){
+    private static String getUserInput() {
         System.out.print(colorize(">> ", Attribute.BRIGHT_GREEN_TEXT()));
         return userInput.nextLine();
     }
@@ -149,7 +149,7 @@ public class Main {
         String action = getUserInput();
         if (action.trim().compareToIgnoreCase("run") == 0) {
             boolean running = true;
-        while (running) {
+            while (running) {
 
                 System.out.println("Enter the tape.");
                 Tape tape = new Tape(getUserInput());
