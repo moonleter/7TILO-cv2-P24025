@@ -1,11 +1,13 @@
 # Turing Machine Simulator - for 7TILO
 
-Turing machine simulator was made by u/vroniu. Transitions and states were made by Šimon Kunz.
+Turing machine simulator was made by u/vroniu. Transitions, states and some changes were made by Šimon Kunz.
+__Machines are located in the machines folder.__
 
-Turing Machine simulator in Java, with CLI interface.
 ________________________________________
 
 ##
+
+Turing Machine simulator in Java, with CLI interface.
 
 ## Features so far
 

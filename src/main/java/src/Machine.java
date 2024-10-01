@@ -1,4 +1,3 @@
-
 package src;
 
 import com.diogonunes.jcolor.Attribute;
@@ -12,35 +11,40 @@ import static com.diogonunes.jcolor.Ansi.colorize;
 public class Machine {
 
     private Tape tape;
-
     private char[] alphabet;
     private DeltaFunc delta;
-
     private int startingState;
     private int currState;
     private int currHeadPos;
-
     private int[] endStates;
-
     private String name, description;
+
+    // Time and space complexity
+    private int timeComplexity;
+    private int spaceComplexity;
+    private int minHeadPos;
+    private int maxHeadPos;
 
     public Machine(Tape tape, char[] alphabet, DeltaFunc delta, int[] endStates, int getStartingState) {
         this.tape = tape;
         this.alphabet = alphabet;
         this.delta = delta;
-
         this.startingState = getStartingState;
         this.endStates = endStates;
+        this.timeComplexity = 0;
+        this.spaceComplexity = 0;
+        this.minHeadPos = 0;
+        this.maxHeadPos = 0;
     }
 
-    public static String getMachineDescriptionFromJson(String path){
+    public static String getMachineDescriptionFromJson(String path) {
         Machine machine = Machine.fromJson(path);
-        if(machine == null){
+        if (machine == null) {
             return "Description unavailable";
         } else return machine.description;
     }
 
-    public static Machine fromJson(String path){
+    public static Machine fromJson(String path) {
         FileReader readFrom;
         try {
             Gson gson = new Gson();
@@ -66,75 +70,94 @@ public class Machine {
         return name;
     }
 
-    public void run(){
-        //Reset the machine
-        this.currState=this.startingState;
-        this.currHeadPos=0;
+    public void run() {
+        // Reset the machine
+        this.currState = this.startingState;
+        this.currHeadPos = 0;
+        this.timeComplexity = 0;
+        this.spaceComplexity = 0;
+        this.minHeadPos = 0;
+        this.maxHeadPos = 0;
 
         boolean running = true;
-        while(running){
+        while (running) {
             try {
-                System.out.printf("%-10s|%-10s| ", "State: "+ this.currState, "Head: " + this.currHeadPos);
+                System.out.printf("%-10s|%-10s| ", "State: " + this.currState, "Head: " + this.currHeadPos);
                 displayCurrentTape(true);
                 System.out.print("\n");
 
-                //Check if the symbol under the head is in the alphabet
+                // Check if the symbol under the head is in the alphabet
                 char symbolAtHeadPos = tape.getSymbol(currHeadPos);
                 boolean valid = false;
-                for(char c:alphabet){
-                    if (c==symbolAtHeadPos){
-                        valid=true;
+                for (char c : alphabet) {
+                    if (c == symbolAtHeadPos) {
+                        valid = true;
                         break;
                     }
                 }
-                if(!valid)throw new IllegalArgumentException("Symbol isnt in the alphabet!");
+                if (!valid) throw new IllegalArgumentException("Symbol isn't in the alphabet!");
 
-                //Find a matching move
+                // Find a matching move
                 Move matchingMove = delta.getMatchingMove(currState, symbolAtHeadPos);
                 currState = matchingMove.getNewState();
                 tape.setSymbol(currHeadPos, matchingMove.getNewChar());
                 currHeadPos += matchingMove.getNewDir();
 
-                //Check if machine is in final state
+                // Update time complexity
+                timeComplexity++;
+
+                // Update min and max head positions
+                minHeadPos = Math.min(minHeadPos, currHeadPos);
+                maxHeadPos = Math.max(maxHeadPos, currHeadPos);
+
+                // Check if machine is in final state
                 for (int state : endStates) {
                     if (state == currState) {
                         running = false;
                     }
                 }
 
-            } catch (NullPointerException n){
+            } catch (NullPointerException n) {
                 System.out.println(colorize("No defined move!", Attribute.BRIGHT_RED_TEXT()));
                 return;
-            } catch (IllegalArgumentException i){
+            } catch (IllegalArgumentException i) {
                 System.out.println(colorize(i.getMessage(), Attribute.BRIGHT_RED_TEXT()));
                 return;
             }
-
         }
         System.out.println("DONE!");
-        System.out.printf("%-10s|%-10s| ", "State: "+ this.currState, "Head: " + this.currHeadPos);
+        System.out.printf("%-10s|%-10s| ", "State: " + this.currState, "Head: " + this.currHeadPos);
         displayCurrentTape(true);
         this.tape.strip();
         System.out.println("\nTape after the operation:");
         displayAllTape();
         System.out.println(" ");
+
+        // Calculate space complexity
+        spaceComplexity = maxHeadPos - minHeadPos + 1;
+
+        // Print time and space complexity
+        System.out.println("Time complexity of the machine: " + timeComplexity);
+        System.out.println("Space complexity of the machine: " + spaceComplexity);
     }
 
     public void displayCurrentTape(boolean showHead) {
         for (int i = currHeadPos - Main.userSettings.getCharsToDisplay(); i <= currHeadPos + Main.userSettings.getCharsToDisplay(); i++) {
             if (i == currHeadPos && showHead) {
                 System.out.print("[" + tape.getSymbol(i) + "]");
-            } else System.out.print(tape.getSymbol(i));
+            } else {
+                System.out.print(tape.getSymbol(i));
+            }
         }
     }
 
-    public void displayAllTape(){
+    public void displayAllTape() {
         for (int i = -tape.getNegativeTapeLen(); i < tape.getTapeLen(); i++) {
             System.out.print(tape.getSymbol(i));
         }
     }
 
-    public int saveMachine(String path){
+    public int saveMachine(String path) {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String json = gson.toJson(this);
 

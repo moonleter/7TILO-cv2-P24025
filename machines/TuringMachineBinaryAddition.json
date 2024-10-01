@@ -91,7 +91,7 @@
         "readState": 2,
         "readChar": "+",
         "newState": 5,
-        "newChar": "+",
+        "newChar": "B",
         "newDir": 1
       },
       {
